@@ -1,0 +1,11 @@
+<package>
+  <description brief="Helpers for interacting with gstreamer lib in cpp">
+  
+  </description>
+  <author>Wellington Castro/wellington.castro@tidewise.io</author>
+  <license>LGPLv2 or later</license>
+  <url>http://github.com/tidewise/drivers-gstreamer</url>
+
+  <depend package="base/cmake" />
+  <depend package="gstreamer" />
+</package>
