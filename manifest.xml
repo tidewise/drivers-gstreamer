@@ -8,4 +8,6 @@
 
   <depend package="base/cmake" />
   <depend package="gstreamer" />
+
+  <test_depend package="google-test" />
 </package>
