@@ -1,2 +1,3 @@
 rock_gtest(test_suite suite.cpp
-   DEPS)
+   test_memory.cpp
+   DEPS gstreamer)
