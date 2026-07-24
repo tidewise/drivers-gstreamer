@@ -8,7 +8,7 @@
 namespace gstreamer {
     namespace memory {
         struct PipelineDestructor {
-            void operator()(GstElement* pipeline) const;
+            void operator()(GstBin* pipeline) const;
         };
 
         template <typename T> struct GstUnref;
