@@ -1,4 +1,9 @@
 rock_library(gstreamer
-    SOURCES 
-    HEADERS)
+    SOURCES
+        memory.cpp
+    HEADERS
+        memory.hpp
+    DEPS_PKGCONFIG
+        gstreamer-1.0
+)
 
