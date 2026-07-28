@@ -36,6 +36,11 @@ std::string rtpbin::recv_rtp_sinkpad(std::string const& session_id)
     return "recv_rtp_sink_" + session_id;
 }
 
+std::string rtpbin::send_rtp_sinkpad(std::string const& session_id)
+{
+    return "send_rtp_sink_" + session_id;
+}
+
 std::string rtpbin::rtcp_sinkpad(std::string const& session_id)
 {
     return "recv_rtcp_sink_" + session_id;
@@ -50,6 +55,12 @@ std::string rtpbin::fec_sinkpad(std::string const& session_id,
     std::string const& fec_stream_index)
 {
     return "recv_fec_sink_" + session_id + "_" + fec_stream_index;
+}
+
+std::string rtpbin::fec_srcpad(std::string const& session_id,
+    std::string const& fec_stream_index)
+{
+    return "send_fec_src_" + session_id + "_" + fec_stream_index;
 }
 
 void rtpbin::linkWithPipelineSrc(GstBin& pipeline,
