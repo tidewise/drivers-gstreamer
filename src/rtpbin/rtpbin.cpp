@@ -58,7 +58,7 @@ void rtpbin::linkWithPipelineSrc(GstBin& pipeline,
 {
     if (!GST_IS_PAD(rtpbin_sink.get())) {
         throw std::runtime_error(
-            "invalid rtpbin sinkpad for pipeline source " + pipeline_src_name);
+            "invalid rtpbin sinkpad for pipeline source '" + pipeline_src_name + "'");
     }
 
     GstUnrefGuard source{gst_bin_get_by_name(&pipeline, pipeline_src_name.c_str())};
@@ -86,7 +86,7 @@ void rtpbin::linkWithPipelineSink(GstBin& pipeline,
 {
     if (!GST_IS_PAD(rtpbin_source.get())) {
         throw std::runtime_error(
-            "invalid rtpbin srcpad for pipeline sink " + pipeline_src_name);
+            "invalid rtpbin srcpad for pipeline sink '" + pipeline_src_name + "'");
     }
 
     GstUnrefGuard sink{gst_bin_get_by_name(&pipeline, pipeline_src_name.c_str())};
