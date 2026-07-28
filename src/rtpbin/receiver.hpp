@@ -7,20 +7,16 @@
 
 #include <gst/gstbin.h>
 
+#include <gstreamer/rtpbin/rtpbin.hpp>
+
 namespace gstreamer {
     namespace rtpbin {
         namespace receiver {
             /** Maps receiver interface to pipeline element names */
-            struct PipelineMapping {
-                int session_id{-1};
-                std::string rtp_source;
-                std::string rtp_sink;
-                std::string rtcp_source;
-                std::string rtcp_feedback_sink;
+            struct PipelineMapping : public rtpbin::PipelineMapping {
                 std::string fec_source_0;
                 std::string fec_source_1;
 
-                bool undefined() const;
                 std::vector<std::string> fec_stream_sources() const;
             };
 

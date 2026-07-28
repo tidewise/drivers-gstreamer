@@ -13,13 +13,7 @@ using namespace gstreamer::memory;
 using namespace gstreamer::rtpbin;
 using namespace gstreamer::rtpbin::receiver;
 
-bool PipelineMapping::undefined() const
-{
-    return session_id == -1 || rtp_source.empty() || rtp_sink.empty() ||
-           rtcp_source.empty() || rtcp_feedback_sink.empty();
-}
-
-std::vector<std::string> PipelineMapping::fec_stream_sources() const
+std::vector<std::string> receiver::PipelineMapping::fec_stream_sources() const
 {
     std::vector<std::string> streams;
     if (!fec_source_0.empty()) {
@@ -63,19 +57,7 @@ void receiver::setup(std::string const& rtpbin_name, Context& ctx)
         rtpbin::linkWithPipelineSrc(*pipeline, ctx.mapping.rtp_source, sinkpad);
     }
 
-    {
-        // pipeline rtcp src -> rtpbin rtcp sink
-        GstUnrefGuard sinkpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::rtcp_sinkpad(id).c_str())};
-        rtpbin::linkWithPipelineSrc(*pipeline, ctx.mapping.rtcp_source, sinkpad);
-    }
-
-    {
-        // rtpbin rtcp src -> pipeline rtcp sink
-        GstUnrefGuard srcpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::rtcp_srcpad(id).c_str())};
-        rtpbin::linkWithPipelineSink(*pipeline, ctx.mapping.rtcp_feedback_sink, srcpad);
-    }
+    rtpbin::setupRTCP(pipeline, rtpbin, ctx.mapping);
 
     auto fec_streams = ctx.mapping.fec_stream_sources();
     for (std::size_t i = 0; i < fec_streams.size(); i++) {

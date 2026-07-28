@@ -5,6 +5,32 @@
 using namespace gstreamer;
 using namespace gstreamer::memory;
 
+void rtpbin::setupRTCP(std::shared_ptr<GstBin> pipeline,
+    memory::GstUnrefGuard<GstElement>& rtpbin,
+    PipelineMapping const& mapping)
+{
+    auto id = std::to_string(mapping.session_id);
+    {
+        // pipeline rtcp src -> rtpbin rtcp sink
+        GstUnrefGuard sinkpad{gst_element_request_pad_simple(rtpbin.get(),
+            rtpbin::rtcp_sinkpad(id).c_str())};
+        rtpbin::linkWithPipelineSrc(*pipeline, mapping.rtcp_source, sinkpad);
+    }
+
+    {
+        // rtpbin rtcp src -> pipeline rtcp sink
+        GstUnrefGuard srcpad{gst_element_request_pad_simple(rtpbin.get(),
+            rtpbin::rtcp_srcpad(id).c_str())};
+        rtpbin::linkWithPipelineSink(*pipeline, mapping.rtcp_feedback_sink, srcpad);
+    }
+}
+
+bool rtpbin::PipelineMapping::undefined() const
+{
+    return session_id == -1 || rtp_source.empty() || rtp_sink.empty() ||
+           rtcp_source.empty() || rtcp_feedback_sink.empty();
+}
+
 std::string rtpbin::rtp_sinkpad(std::string const& session_id)
 {
     return "recv_rtp_sink_" + session_id;
