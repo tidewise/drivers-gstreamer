@@ -31,7 +31,7 @@ bool rtpbin::PipelineMapping::undefined() const
            rtcp_source.empty() || rtcp_feedback_sink.empty();
 }
 
-std::string rtpbin::rtp_sinkpad(std::string const& session_id)
+std::string rtpbin::recv_rtp_sinkpad(std::string const& session_id)
 {
     return "recv_rtp_sink_" + session_id;
 }
@@ -46,7 +46,7 @@ std::string rtpbin::rtcp_srcpad(std::string const& session_id)
     return "send_rtcp_src_" + session_id;
 }
 
-std::string rtpbin::fec_sink(std::string const& session_id,
+std::string rtpbin::fec_sinkpad(std::string const& session_id,
     std::string const& fec_stream_index)
 {
     return "recv_fec_sink_" + session_id + "_" + fec_stream_index;

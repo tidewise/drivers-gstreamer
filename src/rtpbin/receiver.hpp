@@ -34,9 +34,7 @@ namespace gstreamer {
                 guint session,
                 void* user_data = nullptr);
 
-            void onNewPadCallback(GstElement* rtpbin,
-                GstPad* pad,
-                void* pipeline_mapping);
+            void onNewPadCallback(GstElement* rtpbin, GstPad* pad, void* ctx_data);
         }
     }
 }

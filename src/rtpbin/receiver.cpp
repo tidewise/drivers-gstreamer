@@ -52,8 +52,7 @@ void receiver::setup(std::string const& rtpbin_name, Context& ctx)
     {
         // pipeline rtp src -> rtpbin rtp sink
         GstUnrefGuard sinkpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::rtp_sinkpad(id).c_str())};
-        // caps
+            rtpbin::recv_rtp_sinkpad(id).c_str())};
         rtpbin::linkWithPipelineSrc(*pipeline, ctx.mapping.rtp_source, sinkpad);
     }
 
@@ -62,7 +61,7 @@ void receiver::setup(std::string const& rtpbin_name, Context& ctx)
     auto fec_streams = ctx.mapping.fec_stream_sources();
     for (std::size_t i = 0; i < fec_streams.size(); i++) {
         GstUnrefGuard fec_sinkpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::fec_sink(id, std::to_string(i)).c_str())};
+            rtpbin::fec_sinkpad(id, std::to_string(i)).c_str())};
         rtpbin::linkWithPipelineSrc(*pipeline, fec_streams[i], fec_sinkpad);
     }
 }

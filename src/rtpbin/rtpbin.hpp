@@ -26,10 +26,10 @@ namespace gstreamer {
             std::string const& pipeline_sink_name,
             memory::GstUnrefGuard<GstPad>& rtpbin_source);
 
-        std::string rtp_sinkpad(std::string const& session_id);
+        std::string recv_rtp_sinkpad(std::string const& session_id);
         std::string rtcp_sinkpad(std::string const& session_id);
         std::string rtcp_srcpad(std::string const& session_id);
-        std::string fec_sink(std::string const& session_id,
+        std::string fec_sinkpad(std::string const& session_id,
             std::string const& fec_stream_index);
 
         /**
