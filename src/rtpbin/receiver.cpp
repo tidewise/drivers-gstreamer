@@ -36,7 +36,14 @@ std::vector<std::string> PipelineMapping::fec_stream_sources() const
 void receiver::setup(std::string const& rtpbin_name, Context& ctx)
 {
     auto pipeline = ctx.pipeline.lock();
+    if (!pipeline) {
+        throw std::invalid_argument("invalid pipeline pointer");
+    }
+
     GstUnrefGuard rtpbin{gst_bin_get_by_name(pipeline.get(), rtpbin_name.c_str())};
+    if (!GST_IS_BIN(rtpbin.get())) {
+        throw std::invalid_argument("expected '" + rtpbin_name + "' to be a GstBin");
+    }
 
     g_signal_connect(rtpbin.get(),
         "request-aux-receiver",
