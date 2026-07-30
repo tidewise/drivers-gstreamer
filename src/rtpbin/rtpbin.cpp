@@ -5,6 +5,20 @@
 using namespace gstreamer;
 using namespace gstreamer::memory;
 
+std::vector<std::string> rtpbin::PipelineMapping::fec_interfaces() const
+{
+    std::vector<std::string> interfaces;
+
+    if (!fec_0.empty()) {
+        interfaces.push_back(fec_0);
+    }
+    if (!fec_1.empty()) {
+        interfaces.push_back(fec_1);
+    }
+
+    return interfaces;
+}
+
 void rtpbin::setupRTCP(std::shared_ptr<GstBin> pipeline,
     memory::GstUnrefGuard<GstElement>& rtpbin,
     PipelineMapping const& mapping)
@@ -27,8 +41,8 @@ void rtpbin::setupRTCP(std::shared_ptr<GstBin> pipeline,
 
 bool rtpbin::PipelineMapping::undefined() const
 {
-    return session_id == -1 || rtp_source.empty() || rtp_sink.empty() ||
-           rtcp_source.empty() || rtcp_feedback_sink.empty();
+    return role == UNDEFINED || session_id == -1 || rtp_source.empty() ||
+           rtp_sink.empty() || rtcp_source.empty() || rtcp_feedback_sink.empty();
 }
 
 std::string rtpbin::recv_rtp_sinkpad(std::string const& session_id)

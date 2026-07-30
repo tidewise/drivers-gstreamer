@@ -1,21 +1,44 @@
 #ifndef GSTREAMER_RTPBIN_HPP
 #define GSTREAMER_RTPBIN_HPP
 
-#include <gst/gstbin.h>
 #include <memory>
+#include <string>
+#include <vector>
+
+#include <gst/gstbin.h>
 
 #include <gstreamer/memory.hpp>
 
 namespace gstreamer {
     namespace rtpbin {
+        enum Role {
+            UNDEFINED,
+            RECEIVER,
+            SENDER
+        };
+
         struct PipelineMapping {
+            Role role{UNDEFINED};
             int session_id{-1};
             std::string rtp_source;
             std::string rtp_sink;
             std::string rtcp_source;
             std::string rtcp_feedback_sink;
+            std::string fec_0;
+            std::string fec_1;
 
             bool undefined() const;
+
+            /**
+             * Pipeline for error correction streams source / sink depending o \see role.
+             * Sink when SENDER and source when RECEIVER
+             */
+            std::vector<std::string> fec_interfaces() const;
+        };
+
+        struct Context {
+            std::weak_ptr<GstBin> pipeline;
+            PipelineMapping mapping;
         };
 
         void linkWithPipelineSrc(GstBin& pipeline,

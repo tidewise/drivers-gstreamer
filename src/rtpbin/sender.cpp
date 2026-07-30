@@ -10,21 +10,7 @@
 using namespace gstreamer::memory;
 using namespace gstreamer::rtpbin;
 
-std::vector<std::string> sender::PipelineMapping::fec_stream_sinks() const
-{
-    std::vector<std::string> streams;
-    if (!fec_sink_0.empty()) {
-        streams.push_back(fec_sink_0);
-    }
-
-    if (!fec_sink_1.empty()) {
-        streams.push_back(fec_sink_1);
-    }
-
-    return streams;
-}
-
-void sender::setup(std::string const& rtpbin_name, sender::Context& ctx)
+void sender::setup(std::string const& rtpbin_name, Context& ctx)
 {
     auto pipeline = ctx.pipeline.lock();
     GstUnrefGuard rtpbin{gst_bin_get_by_name(pipeline.get(), rtpbin_name.c_str())};
@@ -108,7 +94,7 @@ void sender::onNewPadCallback(GstElement* rtpbin, GstPad* pad, void* ctx_data)
     }
 
     uint16_t fec_id = std::stoi(match[1]);
-    auto fec_sinks = ctx->mapping.fec_stream_sinks();
+    auto fec_sinks = ctx->mapping.fec_interfaces();
     if (fec_id >= fec_sinks.size()) {
         LOG_INFO_S << "there is no fec sink for fec stream " << fec_id << std::endl;
         return;

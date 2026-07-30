@@ -11,18 +11,6 @@
 namespace gstreamer {
     namespace rtpbin {
         namespace sender {
-            struct PipelineMapping : public rtpbin::PipelineMapping {
-                std::string fec_sink_0;
-                std::string fec_sink_1;
-
-                std::vector<std::string> fec_stream_sinks() const;
-            };
-
-            struct Context {
-                std::weak_ptr<GstBin> pipeline;
-                PipelineMapping mapping;
-            };
-
             void setup(std::string const& rtpbin_name, Context& ctx);
 
             GstElement* requestAuxSenderCallback(GstElement* rtpbin,

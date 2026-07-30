@@ -13,20 +13,6 @@ using namespace gstreamer::memory;
 using namespace gstreamer::rtpbin;
 using namespace gstreamer::rtpbin::receiver;
 
-std::vector<std::string> receiver::PipelineMapping::fec_stream_sources() const
-{
-    std::vector<std::string> streams;
-    if (!fec_source_0.empty()) {
-        streams.push_back(fec_source_0);
-    }
-
-    if (!fec_source_1.empty()) {
-        streams.push_back(fec_source_1);
-    }
-
-    return streams;
-}
-
 void receiver::setup(std::string const& rtpbin_name, Context& ctx)
 {
     auto pipeline = ctx.pipeline.lock();
@@ -58,7 +44,7 @@ void receiver::setup(std::string const& rtpbin_name, Context& ctx)
 
     rtpbin::setupRTCP(pipeline, rtpbin, ctx.mapping);
 
-    auto fec_streams = ctx.mapping.fec_stream_sources();
+    auto fec_streams = ctx.mapping.fec_interfaces();
     for (std::size_t i = 0; i < fec_streams.size(); i++) {
         GstUnrefGuard fec_sinkpad{gst_element_request_pad_simple(rtpbin.get(),
             rtpbin::fec_sinkpad(id, std::to_string(i)).c_str())};
