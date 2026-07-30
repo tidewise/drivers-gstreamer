@@ -1,13 +1,14 @@
 #ifndef GSTREAMER_MEMORY_HPP
 #define GSTREAMER_MEMORY_HPP
 
+#include "gst/gststructure.h"
 #include <gst/gstelement.h>
 #include <gst/video/gstvideometa.h>
 
 namespace gstreamer {
     namespace memory {
         struct PipelineDestructor {
-            void operator()(GstElement* pipeline) const;
+            void operator()(GstBin* pipeline) const;
         };
 
         template <typename T> struct GstUnref;
@@ -26,6 +27,8 @@ namespace gstreamer {
         ROCK_GSTREAMER_UNREF(GstMemory, gst_memory_unref);
         ROCK_GSTREAMER_UNREF(GstVideoFrame, gst_video_frame_unmap);
         ROCK_GSTREAMER_UNREF(GstPad, gst_object_unref);
+        ROCK_GSTREAMER_UNREF(GstStructure, gst_structure_free);
+        ROCK_GSTREAMER_UNREF(gchar, g_free);
 
         template <typename T> struct GstUnrefGuard {
             T* object;
