@@ -64,6 +64,9 @@ namespace gstreamer {
         void setupRTCP(std::shared_ptr<GstBin> pipeline,
             memory::GstUnrefGuard<GstElement>& rtpbin,
             PipelineMapping const& mapping);
+
+        std::pair<std::shared_ptr<GstBin>, memory::GstUnrefGuard<GstElement>>
+        acquirePipelineAndRPTBin(std::string const& rtpbin_name, Context& ctx);
     }
 }
 

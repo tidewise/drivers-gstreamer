@@ -19,6 +19,22 @@ std::vector<std::string> rtpbin::PipelineMapping::fec_interfaces() const
     return interfaces;
 }
 
+std::pair<std::shared_ptr<GstBin>, memory::GstUnrefGuard<GstElement>> rtpbin::
+    acquirePipelineAndRPTBin(std::string const& rtpbin_name, Context& ctx)
+{
+    auto pipeline = ctx.pipeline.lock();
+    if (!pipeline) {
+        throw std::invalid_argument("invalid pipeline pointer");
+    }
+
+    GstUnrefGuard rtpbin{gst_bin_get_by_name(pipeline.get(), rtpbin_name.c_str())};
+    if (!GST_IS_BIN(rtpbin.get())) {
+        throw std::invalid_argument("expected '" + rtpbin_name + "' to be a GstBin");
+    }
+
+    return {pipeline, std::move(rtpbin)};
+}
+
 void rtpbin::setupRTCP(std::shared_ptr<GstBin> pipeline,
     memory::GstUnrefGuard<GstElement>& rtpbin,
     PipelineMapping const& mapping)

@@ -12,8 +12,7 @@ using namespace gstreamer::rtpbin;
 
 void sender::setup(std::string const& rtpbin_name, Context& ctx)
 {
-    auto pipeline = ctx.pipeline.lock();
-    GstUnrefGuard rtpbin{gst_bin_get_by_name(pipeline.get(), rtpbin_name.c_str())};
+    auto [pipeline, rtpbin] = acquirePipelineAndRPTBin(rtpbin_name, ctx);
 
     g_signal_connect(rtpbin.get(),
         "request-aux-sender",
