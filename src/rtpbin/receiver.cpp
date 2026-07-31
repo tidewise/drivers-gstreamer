@@ -13,37 +13,10 @@ using namespace gstreamer::memory;
 using namespace gstreamer::rtpbin;
 using namespace gstreamer::rtpbin::receiver;
 
-bool PipelineMapping::undefined() const
-{
-    return session_id == -1 || rtp_source.empty() || rtp_sink.empty() ||
-           rtcp_source.empty() || rtcp_feedback_sink.empty();
-}
-
-std::vector<std::string> PipelineMapping::fec_stream_sources() const
-{
-    std::vector<std::string> streams;
-    if (!fec_source_0.empty()) {
-        streams.push_back(fec_source_0);
-    }
-
-    if (!fec_source_1.empty()) {
-        streams.push_back(fec_source_1);
-    }
-
-    return streams;
-}
-
 void receiver::setup(std::string const& rtpbin_name, Context& ctx)
 {
-    auto pipeline = ctx.pipeline.lock();
-    if (!pipeline) {
-        throw std::invalid_argument("invalid pipeline pointer");
-    }
 
-    GstUnrefGuard rtpbin{gst_bin_get_by_name(pipeline.get(), rtpbin_name.c_str())};
-    if (!GST_IS_BIN(rtpbin.get())) {
-        throw std::invalid_argument("expected '" + rtpbin_name + "' to be a GstBin");
-    }
+    auto [pipeline, rtpbin] = acquirePipelineAndRPTBin(rtpbin_name, ctx);
 
     g_signal_connect(rtpbin.get(),
         "request-aux-receiver",
@@ -58,29 +31,16 @@ void receiver::setup(std::string const& rtpbin_name, Context& ctx)
     {
         // pipeline rtp src -> rtpbin rtp sink
         GstUnrefGuard sinkpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::rtp_sinkpad(id).c_str())};
-        // caps
+            rtpbin::recv_rtp_sinkpad(id).c_str())};
         rtpbin::linkWithPipelineSrc(*pipeline, ctx.mapping.rtp_source, sinkpad);
     }
 
-    {
-        // pipeline rtcp src -> rtpbin rtcp sink
-        GstUnrefGuard sinkpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::rtcp_sinkpad(id).c_str())};
-        rtpbin::linkWithPipelineSrc(*pipeline, ctx.mapping.rtcp_source, sinkpad);
-    }
+    rtpbin::setupRTCP(pipeline, rtpbin, ctx.mapping);
 
-    {
-        // rtpbin rtcp src -> pipeline rtcp sink
-        GstUnrefGuard srcpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::rtcp_srcpad(id).c_str())};
-        rtpbin::linkWithPipelineSink(*pipeline, ctx.mapping.rtcp_feedback_sink, srcpad);
-    }
-
-    auto fec_streams = ctx.mapping.fec_stream_sources();
+    auto fec_streams = ctx.mapping.fec_interfaces();
     for (std::size_t i = 0; i < fec_streams.size(); i++) {
         GstUnrefGuard fec_sinkpad{gst_element_request_pad_simple(rtpbin.get(),
-            rtpbin::fec_sink(id, std::to_string(i)).c_str())};
+            rtpbin::fec_sinkpad(id, std::to_string(i)).c_str())};
         rtpbin::linkWithPipelineSrc(*pipeline, fec_streams[i], fec_sinkpad);
     }
 }

@@ -5,9 +5,70 @@
 using namespace gstreamer;
 using namespace gstreamer::memory;
 
-std::string rtpbin::rtp_sinkpad(std::string const& session_id)
+std::vector<std::string> rtpbin::PipelineMapping::fec_interfaces() const
+{
+    std::vector<std::string> interfaces;
+
+    if (!fec_0.empty()) {
+        interfaces.push_back(fec_0);
+    }
+    if (!fec_1.empty()) {
+        interfaces.push_back(fec_1);
+    }
+
+    return interfaces;
+}
+
+std::pair<std::shared_ptr<GstBin>, memory::GstUnrefGuard<GstElement>> rtpbin::
+    acquirePipelineAndRPTBin(std::string const& rtpbin_name, Context& ctx)
+{
+    auto pipeline = ctx.pipeline.lock();
+    if (!pipeline) {
+        throw std::invalid_argument("invalid pipeline pointer");
+    }
+
+    GstUnrefGuard rtpbin{gst_bin_get_by_name(pipeline.get(), rtpbin_name.c_str())};
+    if (!GST_IS_BIN(rtpbin.get())) {
+        throw std::invalid_argument("expected '" + rtpbin_name + "' to be a GstBin");
+    }
+
+    return {pipeline, std::move(rtpbin)};
+}
+
+void rtpbin::setupRTCP(std::shared_ptr<GstBin> pipeline,
+    memory::GstUnrefGuard<GstElement>& rtpbin,
+    PipelineMapping const& mapping)
+{
+    auto id = std::to_string(mapping.session_id);
+    {
+        // pipeline rtcp src -> rtpbin rtcp sink
+        GstUnrefGuard sinkpad{gst_element_request_pad_simple(rtpbin.get(),
+            rtpbin::rtcp_sinkpad(id).c_str())};
+        rtpbin::linkWithPipelineSrc(*pipeline, mapping.rtcp_source, sinkpad);
+    }
+
+    {
+        // rtpbin rtcp src -> pipeline rtcp sink
+        GstUnrefGuard srcpad{gst_element_request_pad_simple(rtpbin.get(),
+            rtpbin::rtcp_srcpad(id).c_str())};
+        rtpbin::linkWithPipelineSink(*pipeline, mapping.rtcp_feedback_sink, srcpad);
+    }
+}
+
+bool rtpbin::PipelineMapping::undefined() const
+{
+    return role == UNDEFINED || session_id == -1 || rtp_source.empty() ||
+           rtp_sink.empty() || rtcp_source.empty() || rtcp_feedback_sink.empty();
+}
+
+std::string rtpbin::recv_rtp_sinkpad(std::string const& session_id)
 {
     return "recv_rtp_sink_" + session_id;
+}
+
+std::string rtpbin::send_rtp_sinkpad(std::string const& session_id)
+{
+    return "send_rtp_sink_" + session_id;
 }
 
 std::string rtpbin::rtcp_sinkpad(std::string const& session_id)
@@ -20,10 +81,16 @@ std::string rtpbin::rtcp_srcpad(std::string const& session_id)
     return "send_rtcp_src_" + session_id;
 }
 
-std::string rtpbin::fec_sink(std::string const& session_id,
+std::string rtpbin::fec_sinkpad(std::string const& session_id,
     std::string const& fec_stream_index)
 {
     return "recv_fec_sink_" + session_id + "_" + fec_stream_index;
+}
+
+std::string rtpbin::fec_srcpad(std::string const& session_id,
+    std::string const& fec_stream_index)
+{
+    return "send_fec_src_" + session_id + "_" + fec_stream_index;
 }
 
 void rtpbin::linkWithPipelineSrc(GstBin& pipeline,
@@ -32,7 +99,7 @@ void rtpbin::linkWithPipelineSrc(GstBin& pipeline,
 {
     if (!GST_IS_PAD(rtpbin_sink.get())) {
         throw std::runtime_error(
-            "invalid rtpbin sinkpad for pipeline source " + pipeline_src_name);
+            "invalid rtpbin sinkpad for pipeline source '" + pipeline_src_name + "'");
     }
 
     GstUnrefGuard source{gst_bin_get_by_name(&pipeline, pipeline_src_name.c_str())};
@@ -60,7 +127,7 @@ void rtpbin::linkWithPipelineSink(GstBin& pipeline,
 {
     if (!GST_IS_PAD(rtpbin_source.get())) {
         throw std::runtime_error(
-            "invalid rtpbin srcpad for pipeline sink " + pipeline_src_name);
+            "invalid rtpbin srcpad for pipeline sink '" + pipeline_src_name + "'");
     }
 
     GstUnrefGuard sink{gst_bin_get_by_name(&pipeline, pipeline_src_name.c_str())};
